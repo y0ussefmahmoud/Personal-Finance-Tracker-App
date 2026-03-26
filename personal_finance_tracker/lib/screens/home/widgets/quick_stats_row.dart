@@ -17,10 +17,10 @@ class QuickStatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final emeraldBg = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFECFDF5);
-    final emeraldBorder = isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFD1FAE5);
+    final emeraldBorder = isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFD1FAE5);
     final emeraldColor = const Color(0xFF10B981);
     final roseBg = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFFF1F2);
-    final roseBorder = isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFFFE4E6);
+    final roseBorder = isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFFFE4E6);
     final roseColor = const Color(0xFFF43F5E);
 
     return Row(

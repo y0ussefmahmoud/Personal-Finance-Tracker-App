@@ -114,9 +114,11 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
             onPressed: () async {
               double enteredAmount = double.tryParse(controller.text) ?? 0;
               if (enteredAmount <= 0 || enteredAmount > installment.remainingAmount) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text('المبلغ غير صحيح. يجب أن يكون موجبًا ولا يتجاوز المبلغ المتبقي')),
-                );
+                if (context.mounted) {
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('المبلغ غير صحيح. يجب أن يكون موجبًا ولا يتجاوز المبلغ المتبقي')),
+                  );
+                }
                 return;
               }
               double newPaidAmount = installment.paidAmount + enteredAmount;
@@ -136,14 +138,20 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
               );
               try {
                 await context.read<InstallmentProvider>().updateInstallment(updatedInstallment);
-                Navigator.pop(context);
-                messenger.showSnackBar(
-                  SnackBar(content: Text('تم تسجيل الدفعة بنجاح')),
-                );
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+                if (context.mounted) {
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('تم تسجيل الدفعة بنجاح')),
+                  );
+                }
               } catch (e) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text('حدث خطأ أثناء تحديث القسط')),
-                );
+                if (context.mounted) {
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('حدث خطأ أثناء تحديث القسط')),
+                  );
+                }
               }
             },
             child: Text('تأكيد'),
@@ -168,27 +176,25 @@ class _CircularProgressPainter extends CustomPainter {
   final double progress;
   final Color foregroundColor;
   final Color backgroundColor;
-  final double strokeWidth;
 
   _CircularProgressPainter({
     required this.progress,
     required this.foregroundColor,
     required this.backgroundColor,
-    this.strokeWidth = 8.0,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - strokeWidth) / 2;
+    final radius = (size.width - 8.0) / 2;
     final bgPaint = Paint()
       ..color = backgroundColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
+      ..strokeWidth = 8.0;
     final fgPaint = Paint()
       ..color = foregroundColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
+      ..strokeWidth = 8.0
       ..strokeCap = StrokeCap.round;
 
     canvas.drawCircle(center, radius, bgPaint);
@@ -211,7 +217,7 @@ class _InstallmentCard extends StatelessWidget {
   final Installment installment;
   final VoidCallback onPay;
 
-  _InstallmentCard({required this.installment, required this.onPay});
+  const _InstallmentCard({required this.installment, required this.onPay});
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +226,7 @@ class _InstallmentCard extends StatelessWidget {
     final fgColor = installment.status == 'closed'
         ? (isDark ? Color(0xFF00E676) : Color(0xFF4CAF50))
         : (isDark ? Color(0xFF3B82F6) : Color(0xFF1565C0));
-    final bgColor = Theme.of(context).colorScheme.surface.withOpacity(0.3);
+    final bgColor = Theme.of(context).colorScheme.surface.withValues(alpha: 0.3);
 
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -289,7 +295,7 @@ class _InstallmentCard extends StatelessWidget {
 class _DebtCard extends StatefulWidget {
   final Installment debt;
 
-  _DebtCard({required this.debt});
+  const _DebtCard({required this.debt});
 
   @override
   _DebtCardState createState() => _DebtCardState();
@@ -303,7 +309,7 @@ class _DebtCardState extends State<_DebtCard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final amountColor = isDark ? Color(0xFFFF5252) : Color(0xFFEF4444);
     final initial = widget.debt.name.isNotEmpty ? widget.debt.name[0].toUpperCase() : '?';
-    final avatarColor = Theme.of(context).primaryColor.withOpacity(0.1);
+    final avatarColor = Theme.of(context).primaryColor.withValues(alpha: 0.1);
 
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -486,10 +492,14 @@ class _AddInstallmentSheetState extends State<_AddInstallmentSheet> {
                 );
                 try {
                   await context.read<InstallmentProvider>().addInstallment(installment);
-                  messenger.showSnackBar(SnackBar(content: Text('تمت الإضافة بنجاح')));
-                  Navigator.pop(context);
+                  if (context.mounted) {
+                    messenger.showSnackBar(SnackBar(content: Text('تمت الإضافة بنجاح')));
+                    Navigator.pop(context);
+                  }
                 } catch (e) {
-                  messenger.showSnackBar(SnackBar(content: Text('حدث خطأ: ${e.toString()}')));
+                  if (context.mounted) {
+                    messenger.showSnackBar(SnackBar(content: Text('حدث خطأ: ${e.toString()}')));
+                  }
                 }
               },
               child: Text('إضافة'),

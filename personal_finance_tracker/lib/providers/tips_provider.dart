@@ -57,8 +57,7 @@ class TipsProvider extends ChangeNotifier {
 
   Future<void> markAsRead(int id) async {
     final tip = tips.firstWhere((t) => t.id == id);
-    if (tip != null) {
-      final updated = Tip(
+    final updated = Tip(
         id: tip.id,
         title: tip.title,
         content: tip.content,
@@ -66,8 +65,7 @@ class TipsProvider extends ChangeNotifier {
         isRead: true,
         date: tip.date,
       );
-      await updateTip(updated);
-    }
+    await updateTip(updated);
   }
 
   static Future<void> seedDefaultTips() async {

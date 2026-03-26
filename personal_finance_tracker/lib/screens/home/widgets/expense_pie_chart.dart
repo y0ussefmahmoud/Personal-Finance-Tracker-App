@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../../models/category.dart' as Cat;
+import '../../../models/category.dart' as category;
 
 class ExpensePieChart extends StatelessWidget {
   final Map<String, double> expenseByCategory;
-  final List<Cat.Category> categories;
+  final List<category.Category> categories;
 
   const ExpensePieChart({
     super.key,
@@ -27,14 +27,14 @@ class ExpensePieChart extends StatelessWidget {
     final sections = <PieChartSectionData>[];
 
     for (final entry in top3) {
-      final Cat.Category category = categories.firstWhere(
-        (c) => (c as Cat.Category).name == entry.key,
-        orElse: () => Cat.Category(name: entry.key, icon: 'category', color: Colors.grey.value, type: 'expense', isCustom: false),
+      final category.Category categoryItem = categories.firstWhere(
+        (c) => c.name == entry.key,
+        orElse: () => category.Category(name: entry.key, icon: 'category', color: 0xFF9E9E9E, type: 'expense', isCustom: false),
       );
       sections.add(PieChartSectionData(
         value: entry.value,
         radius: 55,
-        color: Color(category.color),
+        color: Color(categoryItem.color),
         title: '',
         titleStyle: TextStyle(fontSize: 0),
       ));
@@ -94,9 +94,9 @@ class ExpensePieChart extends StatelessWidget {
               children: [
                 for (final entry in top3)
                   _LegendItem(
-                    category: categories.firstWhere(
-                      (c) => (c as Cat.Category).name == entry.key,
-                      orElse: () => Cat.Category(name: entry.key, icon: 'category', color: Colors.grey.value, type: 'expense', isCustom: true),
+                    categoryItem: categories.firstWhere(
+                      (c) => c.name == entry.key,
+                      orElse: () => category.Category(name: entry.key, icon: 'category', color: 0xFF9E9E9E, type: 'expense', isCustom: true),
                     ),
                     label: entry.key,
                     value: entry.value,
@@ -104,7 +104,7 @@ class ExpensePieChart extends StatelessWidget {
                   ),
                 if (othersValue > 0)
                   _LegendItem(
-                    category: Cat.Category(name: 'أخرى', icon: 'category', color: Colors.grey.value, type: 'expense', isCustom: false),
+                    categoryItem: category.Category(name: 'أخرى', icon: 'category', color: 0xFF9E9E9E, type: 'expense', isCustom: false),
                     label: 'أخرى',
                     value: othersValue,
                     total: totalExpense,
@@ -119,13 +119,13 @@ class ExpensePieChart extends StatelessWidget {
 }
 
 class _LegendItem extends StatelessWidget {
-  final Cat.Category category;
+  final category.Category categoryItem;
   final String label;
   final double value;
   final double total;
 
   const _LegendItem({
-    required this.category,
+    required this.categoryItem,
     required this.label,
     required this.value,
     required this.total,
@@ -139,7 +139,7 @@ class _LegendItem extends StatelessWidget {
         Container(
           width: 12,
           height: 12,
-          color: Color(category.color),
+          color: Color(categoryItem.color),
         ),
         const SizedBox(width: 4),
         Text(

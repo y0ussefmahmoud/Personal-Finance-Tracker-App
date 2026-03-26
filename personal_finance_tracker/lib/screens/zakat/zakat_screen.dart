@@ -44,11 +44,15 @@ class _ZakatScreenState extends State<ZakatScreen> {
     final settings = DatabaseHelper();
     final nisabString = await settings.getSetting('nisab_value');
     if (nisabString != null) {
-      setState(() {
-        _nisabValue = double.tryParse(nisabString) ?? 250000.0;
-      });
-      _recalculate();
+      updateNisabValue(double.tryParse(nisabString) ?? 250000.0);
     }
+  }
+
+  void updateNisabValue(double newValue) {
+    setState(() {
+      _nisabValue = newValue;
+    });
+    _recalculate();
   }
 
   void _recalculate() {
@@ -196,9 +200,10 @@ class _NisabBannerCard extends StatelessWidget {
               final newValue = double.tryParse(controller.text) ?? parent._nisabValue;
               final settings = DatabaseHelper();
               await settings.setSetting('nisab_value', newValue.toString());
-              parent.setState(() => parent._nisabValue = newValue);
-              parent._recalculate();
-              Navigator.of(context).pop();
+              parent.updateNisabValue(newValue);
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             },
             child: const Text('حفظ'),
           ),
@@ -325,7 +330,9 @@ class _SadaqaView extends StatelessWidget {
                   date: date,
                 );
                 await context.read<ZakatProvider>().addZakatRecord(zakat);
-                Navigator.of(context).pop();
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               },
               child: const Text('حفظ'),
             ),
@@ -417,9 +424,11 @@ class _StickyFooter extends StatelessWidget {
     );
 
     await context.read<ZakatProvider>().addZakatRecord(zakat);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم تسجيل دفع الزكاة بنجاح')),
-    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تسجيل دفع الزكاة بنجاح')),
+      );
+    }
     parent._goldController.clear();
     parent._cashController.clear();
     parent._investmentsController.clear();

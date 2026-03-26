@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:collection/collection.dart';
 import '../../models/transaction.dart';
 import '../../models/category.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/budget_provider.dart';
 import '../../utils/helpers.dart';
-import '../../utils/currency_formatter.dart';
 
 class TransactionListScreen extends StatefulWidget {
   const TransactionListScreen({super.key});
@@ -153,7 +151,10 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                           ),
                         ),
                         ...txns.map((t) {
-                          final Category? cat = context.read<CategoryProvider>().categories.firstWhereOrNull((c) => c.name == t.category);
+                          final Category cat = context.read<CategoryProvider>().categories.firstWhere(
+                            (c) => c.name == t.category,
+                            orElse: () => Category(name: 'Unknown', icon: 'help', color: 0xFF9E9E9E, type: 'expense', isCustom: false),
+                          );
                           return Dismissible(
                             key: ValueKey(t.id),
                             direction: DismissDirection.endToStart,
@@ -167,21 +168,23 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                               final transactionProvider = context.read<TransactionProvider>();
                               transactionProvider.budgetProvider = context.read<BudgetProvider>();
                               await transactionProvider.deleteTransaction(t.id!);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('تم حذف المعاملة')),
-                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('تم حذف المعاملة')),
+                                );
+                              }
                             },
                             child: ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: Colors.grey.shade200,
                                 child: Icon(
-                                  iconFromString(cat?.icon ?? 'category'),
-                                  color: cat != null ? Color(cat.color) : Colors.grey,
+                                  iconFromString(cat.icon),
+                                  color: Color(cat.color),
                                 ),
                               ),
                               title: Text(t.description),
                               subtitle: Text(
-                                '${DateFormat('d MMMM yyyy', 'ar_EG').format(t.date)} • ${cat?.name ?? t.category} • ${t.paymentMethod}',
+                                '${DateFormat('d MMMM yyyy', 'ar_EG').format(t.date)} • ${cat.name} • ${t.paymentMethod}',
                               ),
                               trailing: Text(
                                 formatCurrency(t.amount),

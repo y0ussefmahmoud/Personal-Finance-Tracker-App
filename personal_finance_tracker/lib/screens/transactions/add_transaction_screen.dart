@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -40,7 +42,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     final categories = context.watch<CategoryProvider>().categories;
     final filteredCategories = categories.where((cat) => cat.type == _type || cat.type == 'both').toList();
-    final currencySymbol = context.watch<SettingsProvider>().currencySymbol ?? 'ج.م';
+    final currencySymbol = context.watch<SettingsProvider>().currencySymbol;
 
     return Scaffold(
       appBar: AppBar(
@@ -131,7 +133,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         margin: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: _selectedCategory == cat.name
-                              ? Theme.of(context).primaryColor.withOpacity(0.2)
+                              ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
                               : Colors.grey[200],
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -147,7 +149,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             Text(
                               cat.name,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 12),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color.fromARGB(255, 0, 0, 0),
+                              ),
                             ),
                           ],
                         ),
@@ -188,7 +193,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 // Recurring type
                 if (_isRecurring)
                   DropdownButtonFormField<String>(
-                    value: _selectedRecurringType,
+                    initialValue: _selectedRecurringType,
                     decoration: const InputDecoration(
                       labelText: 'نوع التكرار',
                       border: OutlineInputBorder(),
@@ -279,14 +284,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       transactionProvider.budgetProvider = context.read<BudgetProvider>();
       await transactionProvider.addTransaction(transaction);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم حفظ المعاملة بنجاح')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم حفظ المعاملة بنجاح')),
+        );
+      }
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('حدث خطأ أثناء الحفظ')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('حدث خطأ أثناء الحفظ')),
+        );
+      }
     }
   }
 }

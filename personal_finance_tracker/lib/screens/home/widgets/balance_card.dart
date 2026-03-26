@@ -33,7 +33,7 @@ class BalanceCard extends StatelessWidget {
               width: 128,
               height: 128,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
             ),
@@ -69,7 +69,7 @@ class BalanceCard extends StatelessWidget {
                         Text(
                           'رصيد الحساب الجاري',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 11,
                               ),
                         ),
@@ -87,9 +87,9 @@ class BalanceCard extends StatelessWidget {
                     ElevatedButton(
                       onPressed: onManageTap,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         foregroundColor: Colors.white,
-                        side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                       ),
                       child: const Text('إدارة الأموال'),
                     ),

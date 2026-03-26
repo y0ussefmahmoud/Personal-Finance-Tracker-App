@@ -8,7 +8,16 @@ import '../../providers/installment_provider.dart';
 import '../../providers/zakat_provider.dart';
 import '../../providers/tips_provider.dart';
 
+/// Settings Screen - Manages application settings and user preferences
+/// 
+/// This screen provides access to:
+/// - Theme switching (light/dark mode)
+/// - Language settings
+/// - Currency settings
+/// - Database reset functionality
+/// - Application information and version details
 class SettingsScreen extends StatelessWidget {
+  /// Creates a settings screen
   const SettingsScreen({super.key});
 
   @override
@@ -16,114 +25,199 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('الإعدادات'),
+        centerTitle: true,
       ),
       body: Consumer<SettingsProvider>(
         builder: (context, settings, child) => ListView(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'التفضيلات',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-            ),
-            ListTile(
-              title: const Text('العملة'),
-              trailing: DropdownButton<String>(
-                value: settings.currency,
-                items: ['ج.م', 'USD', 'EUR', 'SAR']
-                    .map((currency) => DropdownMenuItem<String>(
-                          value: currency,
-                          child: Text(currency),
-                        ))
-                    .toList(),
-                onChanged: (newValue) {
-                  if (newValue != null) {
-                    settings.setCurrency(newValue);
-                  }
-                },
-              ),
-            ),
-            SwitchListTile(
-              title: const Text('الوضع المظلم'),
-              value: settings.themeMode == ThemeMode.dark,
-              onChanged: (value) {
-                settings.setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
-              },
-            ),
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'معلومات التطبيق',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-            ),
-            ListTile(
-              title: const Text('الإصدار'),
-              subtitle: const Text('1.0.3'),
-            ),
-            ListTile(
-              title: const Text('حول'),
-              onTap: () => showAboutDialog(
-                context: context,
-                applicationName: 'Personal Finance Tracker',
-                applicationVersion: '1.0.3',
-              ),
-            ),
-            const Divider(),
-            ListTile(
-              leading: Icon(Icons.delete_forever, color: Colors.red),
-              title: Text('إعادة تعيين البيانات', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-              onTap: () async {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('تأكيد إعادة التعيين'),
-                      content: const Text(
-                        'هل أنت متأكد من إعادة تعيين البيانات؟ سيتم حذف جميع المعاملات والميزانيات والأقساط وزكاة والنصائح. هذا الإجراء لا يمكن التراجع عنه.',
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('إلغاء'),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                          onPressed: () async {
-                            Navigator.of(context).pop();
-                            try {
-                              await DatabaseHelper().resetDatabase();
-                              await context.read<TransactionProvider>().fetchTransactions();
-                              await context.read<BudgetProvider>().fetchBudgets();
-                              await context.read<InstallmentProvider>().fetchInstallments();
-                              await context.read<ZakatProvider>().fetchZakatRecords();
-                              await context.read<TipsProvider>().getTips();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('تم إعادة تعيين البيانات بنجاح')),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('فشل في إعادة تعيين البيانات: $e')),
-                              );
-                            }
-                          },
-                          child: const Text('إعادة تعيين'),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
+            _buildPreferencesSection(context, settings),
+            _buildAppInfoSection(context),
+            _buildDangerZoneSection(context),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Builds the preferences section with user settings
+  Widget _buildPreferencesSection(BuildContext context, SettingsProvider settings) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'التفضيلات'),
+        SwitchListTile(
+          title: const Text('الوضع المظلم'),
+          subtitle: const Text('تبديل بين الوضع الفاتح والداكن'),
+          value: settings.themeMode == ThemeMode.dark,
+          onChanged: (value) {
+            settings.setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
+          },
+          secondary: Icon(
+            settings.themeMode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode,
+          ),
+        ),
+        ListTile(
+          title: const Text('العملة'),
+          trailing: DropdownButton<String>(
+            value: settings.currency,
+            items: ['ج.م', 'USD', 'EUR', 'SAR']
+                .map((currency) => DropdownMenuItem<String>(
+                      value: currency,
+                      child: Text(currency),
+                    ))
+                .toList(),
+            onChanged: (newValue) {
+              if (newValue != null) {
+                settings.setCurrency(newValue);
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the application information section
+  Widget _buildAppInfoSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'معلومات التطبيق'),
+        ListTile(
+          leading: const Icon(Icons.info),
+          title: const Text('الإصدار'),
+          subtitle: const Text('1.2.1'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.description),
+          title: const Text('حول'),
+          onTap: () => showAboutDialog(
+            context: context,
+            applicationName: 'Personal Finance Tracker',
+            applicationVersion: '1.2.1',
+            applicationIcon: const Icon(Icons.account_balance_wallet, size: 48),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the dangerous actions section (reset data)
+  Widget _buildDangerZoneSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'الإجراءات الخطرة'),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            '⚠️ تحذير: هذه الإجراءات لا يمكن التراجع عنها',
+            style: TextStyle(
+              color: Colors.orange,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        ListTile(
+          leading: const Icon(Icons.restore, color: Colors.red),
+          title: const Text('إعادة تعيين البيانات'),
+          subtitle: const Text('حذف جميع البيانات واستعادة التطبيق'),
+          onTap: () => _showResetDataConfirmation(context),
+        ),
+      ],
+    );
+  }
+
+  /// Shows confirmation dialog for data reset
+  void _showResetDataConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تأكيد إعادة التعيين'),
+        content: const Text(
+          'هل أنت متأكد من إعادة تعيين البيانات؟ سيتم حذف جميع المعاملات والميزانيات والأقساط وزكاة والنصائح. هذا الإجراء لا يمكن التراجع عنه.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => _performDataReset(context),
+            child: const Text('إعادة تعيين'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Performs the actual data reset operation
+  Future<void> _performDataReset(BuildContext context) async {
+    Navigator.of(context).pop(); // Close dialog
+    
+    try {
+      // Reset database
+      await DatabaseHelper().resetDatabase();
+      
+      // Refresh all providers data
+      await _refreshAllProviders(context);
+      
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم إعادة تعيين البيانات بنجاح'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل في إعادة تعيين البيانات: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Refreshes all provider data after reset
+  Future<void> _refreshAllProviders(BuildContext context) async {
+    await Future.wait([
+      context.read<TransactionProvider>().fetchTransactions(),
+      context.read<BudgetProvider>().fetchBudgets(),
+      context.read<InstallmentProvider>().fetchInstallments(),
+      context.read<ZakatProvider>().fetchZakatRecords(),
+      context.read<TipsProvider>().getTips(),
+    ]);
+  }
+}
+
+/// Custom widget for section headers
+class SectionHeader extends StatelessWidget {
+  final String title;
+  
+  const SectionHeader({
+    super.key,
+    required this.title,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).primaryColor,
+          fontSize: 16,
         ),
       ),
     );

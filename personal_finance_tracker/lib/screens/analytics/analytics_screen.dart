@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../models/category.dart';
-import '../../utils/currency_formatter.dart';
 import '../../utils/icon_helper.dart';
 import '../../widgets/bottom_nav_bar.dart';
 
@@ -53,7 +52,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               : _selectedFilter == 'سنة'
                   ? tp.getYearlyData()
                   : tp.getMonthlyData(6);
-          final expByCat = tp.expenseByCategoryFiltered(_selectedFilter);
+          final expByCat = tp.expenseByCategory;
 
           if (data.isEmpty) {
             return const Center(child: Text('لا توجد بيانات للفترة المحددة'));
@@ -149,7 +148,7 @@ class _MonthlyBarChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final incomeColor = isDark ? const Color(0xFF22C55E) : const Color(0xFF2f7f33);
-    final expenseColor = isDark ? const Color(0xFF3B82F6).withOpacity(0.4) : const Color(0xFF2f7f33).withOpacity(0.3);
+    final expenseColor = isDark ? const Color(0xFF3B82F6).withValues(alpha: 0.4) : const Color(0xFF2f7f33).withValues(alpha: 0.3);
 
     return Card(
       child: Padding(
@@ -299,8 +298,8 @@ class _SavingsLineChartCard extends StatelessWidget {
                         show: true,
                         gradient: LinearGradient(
                           colors: [
-                            lineColor.withOpacity(0.3),
-                            lineColor.withOpacity(0.0),
+                            lineColor.withValues(alpha: 0.3),
+                            lineColor.withValues(alpha: 0.0),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -380,7 +379,7 @@ class _CategoryBreakdownCard extends StatelessWidget {
                 final entry = expenseByCategory.entries.elementAt(index);
                 final category = categories.firstWhere(
                   (c) => c.name == entry.key,
-                  orElse: () => Category(name: entry.key, color: Colors.grey.value, icon: 'help', type: 'expense', isCustom: false),
+                  orElse: () => Category(name: entry.key, color: 0xFF9E9E9E, icon: 'help', type: 'expense', isCustom: false),
                 );
                 final percentage = total > 0 ? (entry.value / total * 100).toStringAsFixed(1) : '0.0';
 
@@ -403,7 +402,7 @@ class _CategoryBreakdownCard extends StatelessWidget {
                           const SizedBox(height: 4),
                           LinearProgressIndicator(
                             value: total > 0 ? entry.value / total : 0,
-                            backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                             color: Color(category.color),
                             borderRadius: BorderRadius.circular(4),
                           ),

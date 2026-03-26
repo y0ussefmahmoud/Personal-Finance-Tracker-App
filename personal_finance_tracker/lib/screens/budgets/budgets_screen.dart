@@ -297,15 +297,17 @@ class _AddBudgetSheetState extends State<_AddBudgetSheet> {
         status: 'active',
       ));
       Navigator.pop(context);
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تمت إضافة الميزانية بنجاح')),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ في الإضافة: $e')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في الإضافة: $e')),
+        );
+      }
     }
   }
 
@@ -326,7 +328,7 @@ class _AddBudgetSheetState extends State<_AddBudgetSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'التصنيف'),
                 items: expenseCategories.map((cat) {
                   return DropdownMenuItem(

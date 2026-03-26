@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../models/transaction.dart' as Tx;
-import '../../../models/category.dart' as Cat;
+import '../../../models/transaction.dart' as transaction;
+import '../../../models/category.dart' as category;
 import 'package:personal_finance_tracker/utils/helpers.dart';
-import '../../../utils/icon_helper.dart';
 
 class RecentTransactionsList extends StatelessWidget {
-  final List<Tx.Transaction> txns;
-  final List<Cat.Category> categories;
+  final List<transaction.Transaction> txns;
+  final List<category.Category> categories;
   final VoidCallback onViewAll;
   final String currency;
 
@@ -46,14 +45,14 @@ class RecentTransactionsList extends StatelessWidget {
           separatorBuilder: (ctx, i) => const Divider(),
           itemBuilder: (ctx, i) {
             final t = txns[i];
-            final Cat.Category cat = categories.firstWhere((c) => (c as Cat.Category).name == t.category, orElse: () => Cat.Category(name: 'unknown', icon: 'help', color: 0xFF000000, type: 'expense', isCustom: false));
+            final category.Category cat = categories.firstWhere((c) => c.name == t.category, orElse: () => category.Category(name: 'unknown', icon: 'help', color: 0xFF000000, type: 'expense', isCustom: false));
             return Card(
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: Color(cat.color).withOpacity(0.1),
+                      backgroundColor: Color(cat.color).withValues(alpha: 0.1),
                       child: Icon(
                         iconFromString(cat.icon),
                         color: Color(cat.color),
@@ -72,7 +71,7 @@ class RecentTransactionsList extends StatelessWidget {
                           Text(
                             '${DateFormat.jm('ar_EG').format(t.date)} • ${cat.name}',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                               fontSize: 11,
                             ),
                           ),

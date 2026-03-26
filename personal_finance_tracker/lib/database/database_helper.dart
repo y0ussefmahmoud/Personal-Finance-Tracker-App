@@ -1,34 +1,60 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../models/transaction.dart' as Tx;
+import '../models/transaction.dart' as transaction;
 import '../models/budget.dart';
-import '../models/category.dart';
+import '../models/category.dart' as models;
 import '../models/zakat.dart';
 import '../models/installment.dart';
 import '../models/tip.dart';
-import '../models/user_settings.dart';
+
+/// Database Helper - Manages SQLite database operations
+/// 
+/// This class provides:
+/// - Singleton pattern for database access
+/// - CRUD operations for all entities
+/// - Database initialization and migration
+/// - Settings management
+/// - Data reset functionality
+/// 
+/// Tables:
+/// - transactions: Financial transactions
+/// - budgets: Budget limits and tracking
+/// - categories: Transaction categories
+/// - zakat: Zakat records
+/// - installments: Installment and debt tracking
+/// - tips: Financial tips
+/// - user_settings: Application settings
 
 class DatabaseHelper {
+  // Singleton pattern
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
+  
+  // Database configuration
+  static const String _databaseName = 'personal_finance.db';
+  static const int _databaseVersion = 2;
 
+  // Private constructor for singleton
   DatabaseHelper._internal();
 
+  /// Factory constructor returns singleton instance
   factory DatabaseHelper() => _instance;
 
+  /// Gets database instance, initializes if needed
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
 
+  /// Initializes database with all tables
   Future<Database> _initDatabase() async {
     final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, 'personal_finance.db');
+    final path = join(databasesPath, _databaseName);
 
     return await openDatabase(
       path,
-      version: 2,
+      version: _databaseVersion,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -156,11 +182,11 @@ class DatabaseHelper {
   }
 
   // Transaction CRUD
-  Future<List<Tx.Transaction>> getTransactions() async => (await query('transactions')).map(Tx.Transaction.fromMap).toList();
+  Future<List<transaction.Transaction>> getTransactions() async => (await query('transactions')).map(transaction.Transaction.fromMap).toList();
 
-  Future<int> insertTransaction(Tx.Transaction t) => insert('transactions', t.toMap());
+  Future<int> insertTransaction(transaction.Transaction t) => insert('transactions', t.toMap());
 
-  Future<void> updateTransaction(Tx.Transaction t) => update('transactions', t.toMap(), where: 'id=?', whereArgs: [t.id]);
+  Future<void> updateTransaction(transaction.Transaction t) => update('transactions', t.toMap(), where: 'id=?', whereArgs: [t.id]);
 
   Future<void> deleteTransaction(int id) => delete('transactions', where: 'id=?', whereArgs: [id]);
 
@@ -174,11 +200,11 @@ class DatabaseHelper {
   Future<void> deleteBudget(int id) => delete('budgets', where: 'id=?', whereArgs: [id]);
 
   // Category CRUD
-  Future<List<Category>> getCategories() async => (await query('categories')).map(Category.fromMap).toList();
+  Future<List<models.Category>> getCategories() async => (await query('categories')).map(models.Category.fromMap).toList();
 
-  Future<int> insertCategory(Category c) => insert('categories', c.toMap());
+  Future<int> insertCategory(models.Category c) => insert('categories', c.toMap());
 
-  Future<void> updateCategory(Category c) => update('categories', c.toMap(), where: 'id=?', whereArgs: [c.id]);
+  Future<void> updateCategory(models.Category c) => update('categories', c.toMap(), where: 'id=?', whereArgs: [c.id]);
 
   Future<void> deleteCategory(int id) => delete('categories', where: 'id=?', whereArgs: [id]);
 
@@ -223,8 +249,12 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('transactions');
     await db.delete('budgets');
-    await db.delete('installments');
+    await db.delete('categories');
     await db.delete('zakat');
+    await db.delete('installments');
     await db.delete('tips');
+    await db.delete('settings');
+    
+    print('Database reset completed');
   }
 }

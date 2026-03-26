@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'utils/theme.dart';
 import 'database/database_helper.dart';
 import 'providers/settings_provider.dart';
@@ -43,10 +45,21 @@ void main() async {
   };
   
   try {
+    // Initialize database factory for all platforms
+    if (kIsWeb) {
+      debugPrint('Initializing Web database...');
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    } else {
+      debugPrint('Initializing Mobile database...');
+      // Mobile (Android/iOS) - use regular sqflite
+    }
+    
     debugPrint('Initializing database...');
-    await DatabaseHelper().database;
-    debugPrint('Database initialized successfully');
-
+    final db = DatabaseHelper();
+    await db.database;
+    debugPrint('Database initialized successfully!');
+    
     debugPrint('Loading settings...');
     final settingsProvider = SettingsProvider();
     await settingsProvider.loadSettings();

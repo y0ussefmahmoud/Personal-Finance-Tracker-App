@@ -1,31 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
-import '../models/transaction.dart' as Tx;
+import '../models/transaction.dart' as transaction;
 import '../providers/budget_provider.dart';
 
+/// Transaction Provider - Manages all financial transactions
+/// 
+/// This provider handles:
+/// - CRUD operations for transactions
+/// - Financial calculations (balance, income, expenses)
+/// - Category-wise expense tracking
+/// - Budget integration and updates
+/// - Monthly and yearly statistics
+/// 
+/// Usage:
+/// ```dart
+/// final provider = context.read<TransactionProvider>();
+/// await provider.addTransaction(transaction);
+/// final balance = provider.totalBalance;
+/// ```
+
 class TransactionProvider extends ChangeNotifier {
-  List<Tx.Transaction> transactions = [];
-  bool isLoading = false;
+  // Private fields
+  List<transaction.Transaction> _transactions = [];
+  bool _isLoading = false;
   BudgetProvider? budgetProvider;
 
+  // Public getters
+  /// List of all transactions
+  List<transaction.Transaction> get transactions => List.unmodifiable(_transactions);
+  
+  /// Loading state indicator
+  bool get isLoading => _isLoading;
+
+  // Financial Calculations
+  
+  /// Calculates total balance (income - expenses)
   double get totalBalance {
     double income = 0;
     double expense = 0;
-    for (final t in transactions) {
+    
+    for (final t in _transactions) {
       if (t.type == 'income') {
         income += t.amount;
       } else {
         expense += t.amount;
       }
     }
+    
     return income - expense;
   }
 
+  /// Calculates current month's total income
   double get currentMonthIncome {
     final now = DateTime.now();
-    return transactions
-        .where((t) => t.type == 'income' && t.date.year == now.year && t.date.month == now.month)
+    return _transactions
+        .where((t) => t.type == 'income' && 
+                    t.date.year == now.year && 
+                    t.date.month == now.month)
         .fold(0, (sum, t) => sum + t.amount);
   }
 
@@ -94,10 +126,10 @@ class TransactionProvider extends ChangeNotifier {
     final now = DateTime.now();
     final data = <Map<String, dynamic>>[];
     final year = now.year;
-    final income = transactions
+    final income = _transactions
         .where((t) => t.type == 'income' && t.date.year == year)
         .fold(0.0, (sum, t) => sum + t.amount);
-    final expense = transactions
+    final expense = _transactions
         .where((t) => t.type == 'expense' && t.date.year == year)
         .fold(0.0, (sum, t) => sum + t.amount);
     final savings = income - expense;
@@ -111,70 +143,116 @@ class TransactionProvider extends ChangeNotifier {
     return data;
   }
 
-  Map<String, double> expenseByCategoryFiltered(String filter) {
-    final now = DateTime.now();
-    Iterable<Tx.Transaction> filteredTransactions;
-    if (filter == 'أسبوع') {
-      final todayStart = DateTime(now.year, now.month, now.day);
-      final weekStart = todayStart.subtract(const Duration(days: 6)); // inclusive: 7 days back
-      final weekEnd = todayStart.add(const Duration(days: 1)); // exclusive end
-      filteredTransactions = transactions.where((t) => t.type == 'expense' && !t.date.isBefore(weekStart) && t.date.isBefore(weekEnd));
-    } else if (filter == 'سنة') {
-      filteredTransactions = transactions.where((t) => t.type == 'expense' && t.date.year == now.year);
-    } else {
-      filteredTransactions = transactions.where((t) => t.type == 'expense' && t.date.year == now.year && t.date.month == now.month);
-    }
-    final map = <String, double>{};
-    for (final t in filteredTransactions) {
-      map[t.category] = (map[t.category] ?? 0) + t.amount;
-    }
-    return map;
-  }
-
+  // CRUD Operations
+  
+  /// Fetches all transactions from database
+  /// 
+  /// Sets loading state during fetch and notifies listeners
   Future<void> fetchTransactions() async {
-    isLoading = true;
-    notifyListeners();
-    final db = DatabaseHelper();
-    transactions = await db.getTransactions();
-    isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> addTransaction(Tx.Transaction transaction) async {
-    final db = DatabaseHelper();
-    await db.insertTransaction(transaction);
-    await fetchTransactions();
-    if (budgetProvider != null && transaction.type == 'expense') {
-      final spent = expenseByCategory[transaction.category] ?? 0;
-      await budgetProvider!.updateSpentForCategory(transaction.category, spent);
+    _setLoading(true);
+    
+    try {
+      final db = DatabaseHelper();
+      _transactions = await db.getTransactions();
+    } catch (e) {
+      // TODO: Add error handling
+      debugPrint('Error fetching transactions: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
-  Future<void> updateTransaction(Tx.Transaction transaction) async {
-    final db = DatabaseHelper();
-    final old = transactions.firstWhere((t) => t.id == transaction.id);
-    await db.updateTransaction(transaction);
-    await fetchTransactions();
-    if (budgetProvider != null) {
-      if (old.type == 'expense') {
-        final spentOld = expenseByCategory[old.category] ?? 0;
-        await budgetProvider!.updateSpentForCategory(old.category, spentOld);
+  /// Adds a new transaction to database
+  /// 
+  /// [transaction] The transaction to add
+  /// Updates budget if it's an expense transaction
+  Future<void> addTransaction(transaction.Transaction transaction) async {
+    try {
+      final db = DatabaseHelper();
+      await db.insertTransaction(transaction);
+      
+      // Refresh data
+      await fetchTransactions();
+      
+      // Update budget if expense
+      if (budgetProvider != null && transaction.type == 'expense') {
+        final spent = expenseByCategory[transaction.category] ?? 0;
+        await budgetProvider!.updateSpentForCategory(transaction.category, spent);
       }
-      if (transaction.type == 'expense' && transaction.category != old.category) {
-        final spentNew = expenseByCategory[transaction.category] ?? 0;
-        await budgetProvider!.updateSpentForCategory(transaction.category, spentNew);
-      }
+    } catch (e) {
+      debugPrint('Error adding transaction: $e');
+      rethrow;
     }
   }
 
+  /// Updates an existing transaction
+  /// 
+  /// [transaction] The transaction with updated data
+  /// Handles budget updates for category changes
+  Future<void> updateTransaction(transaction.Transaction transaction) async {
+    try {
+      final db = DatabaseHelper();
+      final old = _transactions.firstWhere((t) => t.id == transaction.id);
+      
+      await db.updateTransaction(transaction);
+      await fetchTransactions();
+      
+      // Update budgets if needed
+      await _handleBudgetUpdates(old, transaction);
+    } catch (e) {
+      debugPrint('Error updating transaction: $e');
+      rethrow;
+    }
+  }
+
+  /// Deletes a transaction by ID
+  /// 
+  /// [id] The ID of the transaction to delete
+  /// Updates budget if it's an expense transaction
   Future<void> deleteTransaction(int id) async {
-    final db = DatabaseHelper();
-    final deleted = transactions.firstWhere((t) => t.id == id);
-    await db.deleteTransaction(id);
-    await fetchTransactions();
-    if (budgetProvider != null && deleted.type == 'expense') {
-      final spent = expenseByCategory[deleted.category] ?? 0;
-      await budgetProvider!.updateSpentForCategory(deleted.category, spent);
+    try {
+      final db = DatabaseHelper();
+      final deleted = _transactions.firstWhere((t) => t.id == id);
+      
+      await db.deleteTransaction(id);
+      await fetchTransactions();
+      
+      // Update budget if expense
+      if (budgetProvider != null && deleted.type == 'expense') {
+        final spent = expenseByCategory[deleted.category] ?? 0;
+        await budgetProvider!.updateSpentForCategory(deleted.category, spent);
+      }
+    } catch (e) {
+      debugPrint('Error deleting transaction: $e');
+      rethrow;
+    }
+  }
+
+  // Private Helper Methods
+  
+  /// Sets loading state and notifies listeners
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+  
+  /// Handles budget updates when transaction is modified
+  Future<void> _handleBudgetUpdates(
+    transaction.Transaction old, 
+    transaction.Transaction newTransaction
+  ) async {
+    if (budgetProvider == null) return;
+    
+    // Update old category if it was expense
+    if (old.type == 'expense') {
+      final spentOld = expenseByCategory[old.category] ?? 0;
+      await budgetProvider!.updateSpentForCategory(old.category, spentOld);
+    }
+    
+    // Update new category if it's expense and different
+    if (newTransaction.type == 'expense' && newTransaction.category != old.category) {
+      final spentNew = expenseByCategory[newTransaction.category] ?? 0;
+      await budgetProvider!.updateSpentForCategory(newTransaction.category, spentNew);
     }
   }
 }

@@ -133,9 +133,13 @@ class _CategoryTabView extends StatelessWidget {
               final provider = context.read<CategoryProvider>();
               try {
                 await provider.deleteCategory(category.id!);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حذف ${category.name}')));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حذف ${category.name}')));
+                }
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل في الحذف: $e')));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل في الحذف: $e')));
+                }
               }
             },
             style: TextButton.styleFrom(
@@ -277,7 +281,7 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedType,
+              initialValue: _selectedType,
               decoration: const InputDecoration(labelText: 'النوع'),
               items: const [
                 DropdownMenuItem(value: 'income', child: Text('دخل')),
