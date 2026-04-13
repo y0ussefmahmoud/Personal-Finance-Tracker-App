@@ -221,12 +221,7 @@ class DatabaseHelper {
   // Installment CRUD
   Future<List<Installment>> getInstallments() async => (await query('installments')).map(Installment.fromMap).toList();
 
-  Future<int> insertInstallment(Installment i) async {
-    debugPrint('DatabaseHelper.insertInstallment called: ${i.name}');
-    final result = await insert('installments', i.toMap());
-    debugPrint('DatabaseHelper.insertInstallment completed, id: $result');
-    return result;
-  }
+  Future<int> insertInstallment(Installment i) => insert('installments', i.toMap());
 
   Future<void> updateInstallment(Installment i) => update('installments', i.toMap(), where: 'id=?', whereArgs: [i.id]);
 

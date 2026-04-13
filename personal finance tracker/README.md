@@ -107,9 +107,18 @@ lib/
 
 ## 📊 **الإصدارات**
 
-### **الإصدار الحالي: v1.2.4**
+### **الإصدار الحالي: v1.2.5**
 
 #### **تاريخ التحديثات:**
+- **v1.2.5** - 🎉 تحسينات كبيرة في جودة الكود والصيانة
+  - ✅ إكمال TODO في transaction_provider.dart (error handling)
+  - ✅ تقسيم installments_screen.dart من 512 سطر إلى 172 سطر
+  - ✅ إنشاء ملفات منفصلة للمكونات (4 ملفات جديدة)
+  - ✅ إصلاح lint warnings (use_key_in_widget_constructors)
+  - ✅ إزالة debug prints من installment_provider.dart و database_helper.dart
+  - ✅ تحسين جودة الكود والتوثيق
+  - ✅ تحسين قابلية الصيانة والتطوير
+  - ✅ تحسين Clean Code principles
 - **v1.2.4** - 🐛 إصلاحات مهمة وتحسينات
   - ✅ إصلاح مشكلة إضافة القسط/الدين (تحسين التحقق من المدخلات)
   - ✅ إزالة FloatingActionButton من شاشة الأقساط والاعتماد على IconButton فقط

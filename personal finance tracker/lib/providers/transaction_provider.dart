@@ -161,10 +161,11 @@ class TransactionProvider extends ChangeNotifier {
       final db = DatabaseHelper();
       _transactions = await db.getTransactions();
     } catch (e) {
-      // TODO: Add error handling
+      _transactions = [];
       debugPrint('Error fetching transactions: $e');
     } finally {
       _setLoading(false);
+      notifyListeners();
     }
   }
 

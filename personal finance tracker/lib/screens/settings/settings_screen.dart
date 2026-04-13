@@ -87,7 +87,7 @@ class SettingsScreen extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.info),
           title: const Text('الإصدار'),
-          subtitle: const Text('1.2.4'),
+          subtitle: const Text('1.2.5'),
         ),
         ListTile(
           leading: const Icon(Icons.description),
@@ -95,7 +95,7 @@ class SettingsScreen extends StatelessWidget {
           onTap: () => showAboutDialog(
             context: context,
             applicationName: 'Personal Finance Tracker',
-            applicationVersion: '1.2.4',
+            applicationVersion: '1.2.5',
             applicationIcon: const Icon(Icons.account_balance_wallet, size: 48),
           ),
         ),
