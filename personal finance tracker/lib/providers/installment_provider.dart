@@ -36,9 +36,13 @@ class InstallmentProvider extends ChangeNotifier {
   }
 
   Future<void> addInstallment(Installment installment) async {
+    debugPrint('addInstallment called: ${installment.name}');
     final db = DatabaseHelper();
+    debugPrint('Calling db.insertInstallment');
     await db.insertInstallment(installment);
+    debugPrint('insertInstallment completed, calling fetchInstallments');
     await fetchInstallments();
+    debugPrint('addInstallment completed');
   }
 
   Future<void> updateInstallment(Installment installment) async {

@@ -34,7 +34,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.add),
-            onPressed: () => _showAddSheet(),
+            onPressed: _showAddSheet,
           ),
         ],
       ),
@@ -89,11 +89,6 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavBar(currentIndex: 3),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddSheet,
-        icon: Icon(Icons.add),
-        label: Text('إضافة جديد'),
-      ),
       );
   }
 
@@ -462,19 +457,23 @@ class _AddInstallmentSheetState extends State<_AddInstallmentSheet> {
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+                
                 if (_nameController.text.isEmpty ||
                     double.tryParse(_totalAmountController.text) == null ||
                     double.tryParse(_totalAmountController.text)! <= 0 ||
                     double.tryParse(_nextPaymentController.text) == null ||
                     double.tryParse(_nextPaymentController.text)! <= 0 ||
                     _dueDate == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى إدخال بيانات صحيحة')));
+                  messenger.showSnackBar(SnackBar(content: Text('يرجى إدخال بيانات صحيحة')));
                   return;
                 }
+                
                 double totalAmount = double.parse(_totalAmountController.text);
                 double nextPayment = double.parse(_nextPaymentController.text);
                 Installment installment = Installment(
-                  id: null, // Assume auto-generated
+                  id: null,
                   name: _nameController.text,
                   totalAmount: totalAmount,
                   paidAmount: 0,
@@ -484,16 +483,13 @@ class _AddInstallmentSheetState extends State<_AddInstallmentSheet> {
                   type: _typeTab == 0 ? 'installment' : 'debt',
                   status: 'active',
                 );
+                
                 try {
                   await context.read<InstallmentProvider>().addInstallment(installment);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تمت الإضافة بنجاح')));
-                    Navigator.pop(context);
-                  }
+                  messenger.showSnackBar(SnackBar(content: Text('تمت الإضافة بنجاح')));
+                  navigator.pop();
                 } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('حدث خطأ: ${e.toString()}')));
-                  }
+                  messenger.showSnackBar(SnackBar(content: Text('حدث خطأ: ${e.toString()}')));
                 }
               },
               child: Text('إضافة'),
