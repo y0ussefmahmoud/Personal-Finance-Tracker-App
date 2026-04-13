@@ -7,6 +7,7 @@ import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/budget_provider.dart';
 import '../../utils/helpers.dart';
+import 'add_transaction_screen.dart';
 
 class TransactionListScreen extends StatefulWidget {
   const TransactionListScreen({super.key});
@@ -164,6 +165,25 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                               padding: const EdgeInsets.only(right: 16),
                               child: const Icon(Icons.delete, color: Colors.white),
                             ),
+                            confirmDismiss: (direction) async {
+                              return await showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('تأكيد الحذف'),
+                                  content: const Text('هل أنت متأكد من حذف هذه المعاملة؟'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: const Text('إلغاء'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: const Text('حذف', style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                             onDismissed: (direction) async {
                               final transactionProvider = context.read<TransactionProvider>();
                               transactionProvider.budgetProvider = context.read<BudgetProvider>();
@@ -186,12 +206,28 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                               subtitle: Text(
                                 '${DateFormat('d MMMM yyyy', 'ar_EG').format(t.date)} • ${cat.name} • ${t.paymentMethod}',
                               ),
-                              trailing: Text(
-                                formatCurrency(t.amount),
-                                style: TextStyle(
-                                  color: t.type == 'income' ? Colors.green : Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    formatCurrency(t.amount),
+                                    style: TextStyle(
+                                      color: t.type == 'income' ? Colors.green : Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => AddTransactionScreen(transaction: t),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           );

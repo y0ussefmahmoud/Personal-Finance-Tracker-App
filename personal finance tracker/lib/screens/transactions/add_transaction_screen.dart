@@ -10,7 +10,9 @@ import '../../providers/budget_provider.dart';
 import '../../models/transaction.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final Transaction? transaction;
+
+  const AddTransactionScreen({super.key, this.transaction});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -26,6 +28,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   bool _includeInZakat = false;
   String _selectedPaymentMethod = 'نقدي';
   String? _selectedRecurringType;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.transaction != null) {
+      final t = widget.transaction!;
+      _type = t.type;
+      _selectedCategory = t.category;
+      _amountController.text = t.amount.toString();
+      _notesController.text = t.description;
+      _date = t.date;
+      _isRecurring = t.isRecurring;
+      _selectedPaymentMethod = t.paymentMethod;
+      _selectedRecurringType = t.recurringType;
+    }
+  }
 
   Map<String, IconData> iconMap = {
     'restaurant': Icons.restaurant,
@@ -50,7 +68,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('إضافة معاملة'),
+        title: Text(widget.transaction != null ? 'تعديل معاملة' : 'إضافة معاملة'),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
@@ -268,6 +286,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
 
     final transaction = Transaction(
+      id: widget.transaction?.id,
       type: _type,
       amount: double.parse(_amountController.text),
       category: _selectedCategory!,
@@ -276,13 +295,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       paymentMethod: _selectedPaymentMethod,
       isRecurring: _isRecurring,
       recurringType: _selectedRecurringType,
-      createdAt: DateTime.now(),
+      createdAt: widget.transaction?.createdAt ?? DateTime.now(),
     );
 
     try {
       final transactionProvider = context.read<TransactionProvider>();
       transactionProvider.budgetProvider = context.read<BudgetProvider>();
-      await transactionProvider.addTransaction(transaction);
+      
+      if (widget.transaction != null) {
+        await transactionProvider.updateTransaction(transaction);
+      } else {
+        await transactionProvider.addTransaction(transaction);
+      }
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
