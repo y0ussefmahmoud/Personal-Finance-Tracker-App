@@ -50,35 +50,28 @@ class SettingsScreen extends StatelessWidget {
           subtitle: Text('اختر وضع التطبيق'),
           leading: Icon(Icons.palette),
         ),
-        RadioListTile<ThemeMode>(
-          title: const Text('فاتح'),
-          subtitle: const Text('استخدام الوضع الفاتح دائماً'),
-          value: ThemeMode.light,
-          groupValue: settings.themeMode,
-          onChanged: (value) {
-            if (value != null) settings.setThemeMode(value);
+        SegmentedButton<ThemeMode>(
+          segments: const [
+            ButtonSegment(
+              value: ThemeMode.light,
+              label: Text('فاتح'),
+              icon: Icon(Icons.light_mode),
+            ),
+            ButtonSegment(
+              value: ThemeMode.dark,
+              label: Text('داكن'),
+              icon: Icon(Icons.dark_mode),
+            ),
+            ButtonSegment(
+              value: ThemeMode.system,
+              label: Text('نظام'),
+              icon: Icon(Icons.brightness_auto),
+            ),
+          ],
+          selected: {settings.themeMode},
+          onSelectionChanged: (Set<ThemeMode> selected) {
+            settings.setThemeMode(selected.first);
           },
-          secondary: const Icon(Icons.light_mode),
-        ),
-        RadioListTile<ThemeMode>(
-          title: const Text('داكن'),
-          subtitle: const Text('استخدام الوضع الداكن دائماً'),
-          value: ThemeMode.dark,
-          groupValue: settings.themeMode,
-          onChanged: (value) {
-            if (value != null) settings.setThemeMode(value);
-          },
-          secondary: const Icon(Icons.dark_mode),
-        ),
-        RadioListTile<ThemeMode>(
-          title: const Text('نظام'),
-          subtitle: const Text('مطابقة إعدادات الجهاز تلقائياً'),
-          value: ThemeMode.system,
-          groupValue: settings.themeMode,
-          onChanged: (value) {
-            if (value != null) settings.setThemeMode(value);
-          },
-          secondary: const Icon(Icons.brightness_auto),
         ),
         ListTile(
           title: const Text('العملة'),
@@ -110,7 +103,7 @@ class SettingsScreen extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.info),
           title: const Text('الإصدار'),
-          subtitle: const Text('1.3.2'),
+          subtitle: const Text('1.3.3'),
         ),
         ListTile(
           leading: const Icon(Icons.description),
@@ -118,7 +111,7 @@ class SettingsScreen extends StatelessWidget {
           onTap: () => showAboutDialog(
             context: context,
             applicationName: 'Personal Finance Tracker',
-            applicationVersion: '1.3.2',
+            applicationVersion: '1.3.3',
             applicationIcon: const Icon(Icons.account_balance_wallet, size: 48),
           ),
         ),

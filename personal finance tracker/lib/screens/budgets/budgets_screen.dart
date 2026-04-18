@@ -268,12 +268,13 @@ class _AddBudgetSheetState extends State<_AddBudgetSheet> {
     }
   }
 
-  Future<void> _addBudget() async {
+  /// Validates the budget form fields
+  bool _validateForm() {
     if (_selectedCategory == null || _amountController.text.isEmpty || _startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يرجى ملء جميع الحقول')),
       );
-      return;
+      return false;
     }
 
     final amount = double.tryParse(_amountController.text);
@@ -281,38 +282,60 @@ class _AddBudgetSheetState extends State<_AddBudgetSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يرجى إدخال مبلغ صحيح')),
       );
-      return;
+      return false;
     }
 
     if (_endDate!.isBefore(_startDate!)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تاريخ النهاية يجب أن يكون بعد أو يساوي تاريخ البداية')),
       );
-      return;
+      return false;
     }
 
+    return true;
+  }
+
+  /// Creates a Budget object from form fields
+  Budget _createBudget() {
+    final amount = double.parse(_amountController.text);
+    return Budget(
+      category: _selectedCategory!,
+      amount: amount,
+      spent: 0.0,
+      startDate: _startDate!,
+      endDate: _endDate!,
+      status: 'active',
+    );
+  }
+
+  /// Shows success message and closes the sheet
+  void _showSuccessAndClose() {
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('تمت إضافة الميزانية بنجاح')),
+    );
+  }
+
+  /// Shows error message
+  void _showError(dynamic error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('خطأ في الإضافة: $error')),
+    );
+  }
+
+  /// Main add budget method that orchestrates validation and saving
+  Future<void> _addBudget() async {
+    if (!_validateForm()) return;
+
+    final budget = _createBudget();
+
     try {
-      final navigator = Navigator.of(context);
-      await context.read<BudgetProvider>().addBudget(Budget(
-        category: _selectedCategory!,
-        amount: amount,
-        spent: 0.0,
-        startDate: _startDate!,
-        endDate: _endDate!,
-        status: 'active',
-      ));
-      if (!context.mounted) return;
-      navigator.pop();
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تمت إضافة الميزانية بنجاح')),
-      );
+      await context.read<BudgetProvider>().addBudget(budget);
+      _showSuccessAndClose();
     } catch (e) {
-      if (!context.mounted) return;
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ في الإضافة: $e')),
-      );
+      _showError(e);
     }
   }
 
@@ -332,34 +355,10 @@ class _AddBudgetSheetState extends State<_AddBudgetSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<String>(
-                initialValue: _selectedCategory,
-                decoration: const InputDecoration(labelText: 'التصنيف'),
-                items: expenseCategories.map((cat) {
-                  return DropdownMenuItem<String>(
-                    value: cat.name,
-                    child: Text(cat.name),
-                  );
-                }).toList(),
-                onChanged: (value) => setState(() => _selectedCategory = value),
-              ),
-              TextFormField(
-                controller: _amountController,
-                decoration: const InputDecoration(labelText: 'المبلغ', suffixText: 'ج.م'),
-                keyboardType: TextInputType.number,
-              ),
-              TextFormField(
-                readOnly: true,
-                decoration: const InputDecoration(labelText: 'تاريخ البداية'),
-                onTap: () => _selectDate(context, true),
-                controller: TextEditingController(text: _startDate != null ? _startDate!.toString().split(' ')[0] : ''),
-              ),
-              TextFormField(
-                readOnly: true,
-                decoration: const InputDecoration(labelText: 'تاريخ النهاية'),
-                onTap: () => _selectDate(context, false),
-                controller: TextEditingController(text: _endDate != null ? _endDate!.toString().split(' ')[0] : ''),
-              ),
+              _buildCategoryDropdown(expenseCategories),
+              _buildAmountField(),
+              _buildStartDateField(),
+              _buildEndDateField(),
               const SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: _addBudget,
@@ -370,6 +369,50 @@ class _AddBudgetSheetState extends State<_AddBudgetSheet> {
           ),
         );
       },
+    );
+  }
+
+  /// Builds the category dropdown
+  Widget _buildCategoryDropdown(List<dynamic> expenseCategories) {
+    return DropdownButtonFormField<String>(
+      initialValue: _selectedCategory,
+      decoration: const InputDecoration(labelText: 'التصنيف'),
+      items: expenseCategories.map((cat) {
+        return DropdownMenuItem<String>(
+          value: cat.name,
+          child: Text(cat.name),
+        );
+      }).toList(),
+      onChanged: (value) => setState(() => _selectedCategory = value),
+    );
+  }
+
+  /// Builds the amount input field
+  Widget _buildAmountField() {
+    return TextFormField(
+      controller: _amountController,
+      decoration: const InputDecoration(labelText: 'المبلغ', suffixText: 'ج.م'),
+      keyboardType: TextInputType.number,
+    );
+  }
+
+  /// Builds the start date field
+  Widget _buildStartDateField() {
+    return TextFormField(
+      readOnly: true,
+      decoration: const InputDecoration(labelText: 'تاريخ البداية'),
+      onTap: () => _selectDate(context, true),
+      controller: TextEditingController(text: _startDate != null ? _startDate!.toString().split(' ')[0] : ''),
+    );
+  }
+
+  /// Builds the end date field
+  Widget _buildEndDateField() {
+    return TextFormField(
+      readOnly: true,
+      decoration: const InputDecoration(labelText: 'تاريخ النهاية'),
+      onTap: () => _selectDate(context, false),
+      controller: TextEditingController(text: _endDate != null ? _endDate!.toString().split(' ')[0] : ''),
     );
   }
 }

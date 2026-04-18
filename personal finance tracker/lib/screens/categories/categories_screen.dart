@@ -355,77 +355,13 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'الاسم'),
-              validator: (value) => value?.isEmpty ?? true ? 'الاسم مطلوب' : null,
-            ),
+            _buildNameField(),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedType,
-              decoration: const InputDecoration(labelText: 'النوع'),
-              items: const [
-                DropdownMenuItem(value: 'income', child: Text('دخل')),
-                DropdownMenuItem(value: 'expense', child: Text('مصروف')),
-                DropdownMenuItem(value: 'both', child: Text('كلاهما')),
-              ],
-              onChanged: (value) => setState(() => _selectedType = value!),
-            ),
+            _buildTypeDropdown(),
             const SizedBox(height: 16),
-            const Text('الأيقونة'),
-            const SizedBox(height: 8),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-              ),
-              itemCount: _availableIcons.length,
-              itemBuilder: (context, index) {
-                final iconName = _availableIcons[index];
-                final isSelected = iconName == _selectedIcon;
-                return InkWell(
-                  onTap: () => setState(() => _selectedIcon = iconName),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(iconFromString(iconName)),
-                  ),
-                );
-              },
-            ),
+            _buildIconGrid(),
             const SizedBox(height: 16),
-            const Text('اللون'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _availableColors.map((color) {
-                final isSelected = color == _selectedColor;
-                return InkWell(
-                  onTap: () => setState(() => _selectedColor = color),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Color(color),
-                      border: Border.all(
-                        color: isSelected ? Colors.black : Colors.transparent,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
+            _buildColorPicker(),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _save,
@@ -437,9 +373,103 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
     );
   }
 
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    final newCategory = Category(
+  /// Builds the name input field
+  Widget _buildNameField() {
+    return TextFormField(
+      controller: _nameController,
+      decoration: const InputDecoration(labelText: 'الاسم'),
+      validator: (value) => value?.isEmpty ?? true ? 'الاسم مطلوب' : null,
+    );
+  }
+
+  /// Builds the type dropdown
+  Widget _buildTypeDropdown() {
+    return DropdownButtonFormField<String>(
+      initialValue: _selectedType,
+      decoration: const InputDecoration(labelText: 'النوع'),
+      items: const [
+        DropdownMenuItem(value: 'income', child: Text('دخل')),
+        DropdownMenuItem(value: 'expense', child: Text('مصروف')),
+        DropdownMenuItem(value: 'both', child: Text('كلاهما')),
+      ],
+      onChanged: (value) => setState(() => _selectedType = value!),
+    );
+  }
+
+  /// Builds the icon selection grid
+  Widget _buildIconGrid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('الأيقونة'),
+        const SizedBox(height: 8),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+          ),
+          itemCount: _availableIcons.length,
+          itemBuilder: (context, index) {
+            final iconName = _availableIcons[index];
+            final isSelected = iconName == _selectedIcon;
+            return InkWell(
+              onTap: () => setState(() => _selectedIcon = iconName),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(iconFromString(iconName)),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  /// Builds the color picker
+  Widget _buildColorPicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('اللون'),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _availableColors.map((color) {
+            final isSelected = color == _selectedColor;
+            return InkWell(
+              onTap: () => setState(() => _selectedColor = color),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Color(color),
+                  border: Border.all(
+                    color: isSelected ? Colors.black : Colors.transparent,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  /// Creates a Category object from form fields
+  Category _createCategory() {
+    return Category(
       id: widget.category?.id,
       name: _nameController.text,
       color: _selectedColor,
@@ -447,20 +477,44 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
       type: _selectedType,
       isCustom: widget.category?.isCustom ?? true,
     );
+  }
+
+  /// Saves the category to the database
+  Future<void> _saveCategory(Category category) async {
     final provider = context.read<CategoryProvider>();
-    try {
-      if (widget.category == null) {
-        await provider.addCategory(newCategory);
-      } else {
-        await provider.updateCategory(newCategory);
-      }
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل في حفظ التصنيف: $e')));
-      return;
+    if (widget.category == null) {
+      await provider.addCategory(category);
+    } else {
+      await provider.updateCategory(category);
     }
+  }
+
+  /// Shows success message and closes the sheet
+  void _showSuccessAndClose() {
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حفظ التصنيف')));
+    }
+  }
+
+  /// Shows error message
+  void _showError(dynamic error) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل في حفظ التصنيف: $error')));
+    }
+  }
+
+  /// Main save method that orchestrates validation and saving
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final category = _createCategory();
+
+    try {
+      await _saveCategory(category);
+      _showSuccessAndClose();
+    } catch (e) {
+      _showError(e);
     }
   }
 }
