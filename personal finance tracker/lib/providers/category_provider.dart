@@ -19,12 +19,12 @@ class CategoryProvider extends ChangeNotifier {
   }
 
   Future<void> addCategory(Category category) async {
-    await _categoryRepository.addCategory(category);
+    await _categoryRepository.addCategoryLegacy(category);
     await fetchCategories();
   }
 
   Future<void> updateCategory(Category category) async {
-    await _categoryRepository.updateCategory(category);
+    await _categoryRepository.updateCategoryLegacy(category);
     await fetchCategories();
   }
 
@@ -94,7 +94,7 @@ class CategoryProvider extends ChangeNotifier {
       
       if (kDebugMode) debugPrint('Inserting ${defaultCategories.length} categories...');
       for (final cat in defaultCategories) {
-        await _categoryRepository.addCategory(cat);
+        await _categoryRepository.addCategoryLegacy(cat);
         if (kDebugMode) debugPrint('Inserted category: ${cat.name} (${cat.type})');
       }
       
@@ -119,7 +119,7 @@ class CategoryProvider extends ChangeNotifier {
       if (missingCategories.isNotEmpty) {
         if (kDebugMode) debugPrint('Adding ${missingCategories.length} missing categories...');
         for (final cat in missingCategories) {
-          await _categoryRepository.addCategory(cat);
+          await _categoryRepository.addCategoryLegacy(cat);
           if (kDebugMode) debugPrint('Added missing category: ${cat.name} (${cat.type})');
         }
         await fetchCategories();

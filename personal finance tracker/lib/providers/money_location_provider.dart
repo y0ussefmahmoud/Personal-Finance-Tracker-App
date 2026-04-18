@@ -24,12 +24,12 @@ class MoneyLocationProvider extends ChangeNotifier {
   }
 
   Future<void> addMoneyLocation(MoneyLocation moneyLocation) async {
-    await _moneyLocationRepository.addMoneyLocation(moneyLocation);
+    await _moneyLocationRepository.addMoneyLocationLegacy(moneyLocation);
     await fetchMoneyLocations();
   }
 
   Future<void> updateMoneyLocation(MoneyLocation moneyLocation) async {
-    await _moneyLocationRepository.updateMoneyLocation(moneyLocation);
+    await _moneyLocationRepository.updateMoneyLocationLegacy(moneyLocation);
     await fetchMoneyLocations();
   }
 

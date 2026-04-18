@@ -4,11 +4,16 @@ import '../database/database_helper.dart';
 import '../models/transaction.dart' as transaction;
 import '../repositories/transaction_repository.dart';
 import '../providers/budget_provider.dart';
+import '../domain/usecases/add_transaction_usecase.dart';
+import '../domain/usecases/get_transactions_usecase.dart';
+import '../domain/usecases/update_transaction_usecase.dart';
+import '../domain/usecases/delete_transaction_usecase.dart';
+import '../domain/entities/transaction_entity.dart';
 
 /// Transaction Provider - Manages all financial transactions
 /// 
 /// This provider handles:
-/// - CRUD operations for transactions
+/// - CRUD operations for transactions using Use Cases
 /// - Financial calculations (balance, income, expenses)
 /// - Category-wise expense tracking
 /// - Budget integration and updates
@@ -28,8 +33,19 @@ class TransactionProvider extends ChangeNotifier {
   BudgetProvider? budgetProvider;
   final TransactionRepository _transactionRepository;
 
+  // Use Cases
+  late final AddTransactionUseCase _addTransactionUseCase;
+  late final GetTransactionsUseCase _getTransactionsUseCase;
+  late final UpdateTransactionUseCase _updateTransactionUseCase;
+  late final DeleteTransactionUseCase _deleteTransactionUseCase;
+
   TransactionProvider({this.budgetProvider})
-      : _transactionRepository = TransactionRepository(DatabaseHelper());
+      : _transactionRepository = TransactionRepository(DatabaseHelper()) {
+    _addTransactionUseCase = AddTransactionUseCase(_transactionRepository);
+    _getTransactionsUseCase = GetTransactionsUseCase(_transactionRepository);
+    _updateTransactionUseCase = UpdateTransactionUseCase(_transactionRepository);
+    _deleteTransactionUseCase = DeleteTransactionUseCase(_transactionRepository);
+  }
 
   // Public getters
   /// List of all transactions sorted by date (newest first)
@@ -154,14 +170,15 @@ class TransactionProvider extends ChangeNotifier {
 
   // CRUD Operations
   
-  /// Fetches all transactions from database
+  /// Fetches all transactions from database using Use Case
   /// 
   /// Sets loading state during fetch and notifies listeners
   Future<void> fetchTransactions() async {
     _setLoading(true);
 
     try {
-      _transactions = await _transactionRepository.getAllTransactions();
+      final entities = await _getTransactionsUseCase();
+      _transactions = entities.map((e) => _toModel(e)).toList();
     } catch (e) {
       _transactions = [];
       if (kDebugMode) debugPrint('Error fetching transactions: $e');
@@ -171,13 +188,14 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  /// Adds a new transaction to database
+  /// Adds a new transaction to database using Use Case
   ///
   /// [transaction] The transaction to add
   /// Updates budget if it's an expense transaction
   Future<void> addTransaction(transaction.Transaction transaction) async {
     try {
-      await _transactionRepository.addTransaction(transaction);
+      final entity = _toEntity(transaction);
+      await _addTransactionUseCase(entity);
 
       // Refresh data
       await fetchTransactions();
@@ -193,7 +211,7 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  /// Updates an existing transaction
+  /// Updates an existing transaction using Use Case
   ///
   /// [transaction] The transaction with updated data
   /// Handles budget updates for category changes
@@ -201,7 +219,8 @@ class TransactionProvider extends ChangeNotifier {
     try {
       final old = _transactions.firstWhere((t) => t.id == transaction.id);
 
-      await _transactionRepository.updateTransaction(transaction);
+      final entity = _toEntity(transaction);
+      await _updateTransactionUseCase(entity);
       await fetchTransactions();
 
       // Update budgets if needed
@@ -212,7 +231,7 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  /// Deletes a transaction by ID
+  /// Deletes a transaction by ID using Use Case
   ///
   /// [id] The ID of the transaction to delete
   /// Updates budget if it's an expense transaction
@@ -220,7 +239,7 @@ class TransactionProvider extends ChangeNotifier {
     try {
       final deleted = _transactions.firstWhere((t) => t.id == id);
 
-      await _transactionRepository.deleteTransaction(id);
+      await _deleteTransactionUseCase(id);
       await fetchTransactions();
 
       // Update budget if expense
@@ -232,6 +251,42 @@ class TransactionProvider extends ChangeNotifier {
       if (kDebugMode) debugPrint('Error deleting transaction: $e');
       rethrow;
     }
+  }
+
+  // Private Helper Methods
+  
+  /// Converts Transaction model to TransactionEntity
+  TransactionEntity _toEntity(transaction.Transaction model) {
+    return TransactionEntity(
+      id: model.id,
+      type: model.type,
+      amount: model.amount,
+      category: model.category,
+      description: model.description,
+      date: model.date,
+      paymentMethod: model.paymentMethod,
+      isRecurring: model.isRecurring,
+      recurringType: model.recurringType,
+      createdAt: model.createdAt,
+      moneyLocationId: model.moneyLocationId,
+    );
+  }
+
+  /// Converts TransactionEntity to Transaction model
+  transaction.Transaction _toModel(TransactionEntity entity) {
+    return transaction.Transaction(
+      id: entity.id,
+      type: entity.type,
+      amount: entity.amount,
+      category: entity.category,
+      description: entity.description,
+      date: entity.date,
+      paymentMethod: entity.paymentMethod,
+      isRecurring: entity.isRecurring,
+      recurringType: entity.recurringType,
+      createdAt: entity.createdAt,
+      moneyLocationId: entity.moneyLocationId,
+    );
   }
 
   // Private Helper Methods

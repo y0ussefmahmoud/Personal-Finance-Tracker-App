@@ -41,12 +41,12 @@ class TipsProvider extends ChangeNotifier {
   }
 
   Future<void> addTip(Tip tip) async {
-    await _tipRepository.addTip(tip);
+    await _tipRepository.addTipLegacy(tip);
     await fetchTips();
   }
 
   Future<void> updateTip(Tip tip) async {
-    await _tipRepository.updateTip(tip);
+    await _tipRepository.updateTipLegacy(tip);
     await fetchTips();
   }
 
@@ -120,7 +120,7 @@ class TipsProvider extends ChangeNotifier {
 
     final tipRepository = TipRepository(db);
     for (final tip in defaultTips) {
-      await tipRepository.addTip(tip);
+      await tipRepository.addTipLegacy(tip);
     }
 
     await db.setSetting('tips_seeded', 'true');

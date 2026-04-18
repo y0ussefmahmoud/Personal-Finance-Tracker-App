@@ -20,12 +20,12 @@ class BudgetProvider extends ChangeNotifier {
   }
 
   Future<void> addBudget(Budget budget) async {
-    await _budgetRepository.addBudget(budget);
+    await _budgetRepository.addBudgetLegacy(budget);
     await fetchBudgets();
   }
 
   Future<void> updateBudget(Budget budget) async {
-    await _budgetRepository.updateBudget(budget);
+    await _budgetRepository.updateBudgetLegacy(budget);
     await fetchBudgets();
   }
 

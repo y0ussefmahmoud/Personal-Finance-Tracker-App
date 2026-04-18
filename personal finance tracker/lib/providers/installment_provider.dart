@@ -40,12 +40,12 @@ class InstallmentProvider extends ChangeNotifier {
   }
 
   Future<void> addInstallment(Installment installment) async {
-    await _installmentRepository.addInstallment(installment);
+    await _installmentRepository.addInstallmentLegacy(installment);
     await fetchInstallments();
   }
 
   Future<void> updateInstallment(Installment installment) async {
-    await _installmentRepository.updateInstallment(installment);
+    await _installmentRepository.updateInstallmentLegacy(installment);
     await fetchInstallments();
   }
 

@@ -262,18 +262,34 @@ lib/
 
 
 
-### **الإصدار الحالي: v1.3.2**
+### **الإصدار الحالي: v1.3.4**
 
 
 
 #### **تاريخ التحديثات:**
 
+- **v1.3.4** - 🎉 تحويل كامل إلى Clean Architecture
+  - ✅ إضافة Domain Layer (7 Entities: Transaction, Category, Budget, MoneyLocation, Installment, Zakat, Tip)
+  - ✅ إضافة Repository Interfaces (7 interfaces لتعريف عقود الوصول إلى البيانات)
+  - ✅ إضافة Use Cases Layer (28 Use Cases لفصل منطق العمل)
+  - ✅ تحديث جميع Repositories لتنفذ الـ interfaces
+  - ✅ تحديث TransactionProvider لاستخدام Use Cases
+  - ✅ إضافة دوال legacy للتوافق مع الكود الحالي
+  - ✅ تطبيق Dependency Inversion Principle
+  - ✅ فصل واضح بين الطبقات (Domain, Data, Presentation)
+  - ✅ تقسيم جميع الدوال الطويلة (> 50 سطر) في الشاشات
+  - ✅ إصلاح تحذيرات deprecation (SegmentedButton بدلاً من RadioListTile)
+  - ✅ تحسين قابلية الصيانة والاختبار بشكل كبير
+
+- **v1.3.3** - 🎉 تحسينات إضافية
+  - ✅ تحسين فصل الطبقات والاعتماد على Repository Pattern
+  - ✅ إصلاح جميع أخطاء التجميع (Category conflict, type mismatches, deprecated members)
+  - ✅ إضافة خيار "وضع النظام" (System Theme) في إعدادات الوضع المظلم
+
 - **v1.3.2** - 🎉 تحسينات كبيرة في البنية والكود
   - ✅ إضافة Repository Pattern لجميع النماذج (Transaction, Category, MoneyLocation, Budget, Installment, Zakat, Tips)
   - ✅ تحسين فصل الطبقات والاعتماد على Repository Pattern بدلاً من الوصول المباشر لقاعدة البيانات
   - ✅ إصلاح debugPrint statements بإضافة kDebugMode لمنع ظهورها في Production
-  - ✅ إصلاح جميع أخطاء التجميع (Category conflict, type mismatches, deprecated members)
-  - ✅ إضافة خيار "وضع النظام" (System Theme) في إعدادات الوضع المظلم
   - ✅ تحسين قابلية الصيانة والاختبار
   - ✅ تحسين Clean Architecture principles
   - ✅ إضافة توثيق شامل لجميع الطبقات

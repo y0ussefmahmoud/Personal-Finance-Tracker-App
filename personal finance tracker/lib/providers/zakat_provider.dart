@@ -28,12 +28,12 @@ class ZakatProvider extends ChangeNotifier {
   }
 
   Future<void> addZakatRecord(Zakat zakat) async {
-    await _zakatRepository.addZakat(zakat);
+    await _zakatRepository.addZakatLegacy(zakat);
     await fetchZakatRecords();
   }
 
   Future<void> updateZakatRecord(Zakat zakat) async {
-    await _zakatRepository.updateZakat(zakat);
+    await _zakatRepository.updateZakatLegacy(zakat);
     await fetchZakatRecords();
   }
 
