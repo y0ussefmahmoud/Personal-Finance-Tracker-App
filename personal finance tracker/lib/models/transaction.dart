@@ -9,6 +9,7 @@ class Transaction {
   final bool isRecurring;
   final String? recurringType;
   final DateTime createdAt;
+  final int? moneyLocationId;
 
   Transaction({
     this.id,
@@ -21,6 +22,7 @@ class Transaction {
     required this.isRecurring,
     this.recurringType,
     required this.createdAt,
+    this.moneyLocationId,
   });
 
   Map<String, dynamic> toMap() {
@@ -35,6 +37,7 @@ class Transaction {
       'isRecurring': isRecurring ? 1 : 0,
       'recurringType': recurringType,
       'createdAt': createdAt.millisecondsSinceEpoch,
+      'moneyLocationId': moneyLocationId,
     };
   }
 
@@ -50,6 +53,7 @@ class Transaction {
       isRecurring: map['isRecurring'] == 1,
       recurringType: map['recurringType'],
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
+      moneyLocationId: map['moneyLocationId'],
     );
   }
 }

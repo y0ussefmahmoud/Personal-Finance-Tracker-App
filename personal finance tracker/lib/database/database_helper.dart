@@ -7,6 +7,7 @@ import '../models/category.dart' as models;
 import '../models/zakat.dart';
 import '../models/installment.dart';
 import '../models/tip.dart';
+import '../models/money_location.dart';
 
 /// Database Helper - Manages SQLite database operations
 /// 
@@ -24,6 +25,7 @@ import '../models/tip.dart';
 /// - zakat: Zakat records
 /// - installments: Installment and debt tracking
 /// - tips: Financial tips
+/// - money_locations: Money storage locations (cash, bank, etc.)
 /// - user_settings: Application settings
 
 class DatabaseHelper {
@@ -33,7 +35,7 @@ class DatabaseHelper {
   
   // Database configuration
   static const String _databaseName = 'personal_finance.db';
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 5;
 
   // Private constructor for singleton
   DatabaseHelper._internal();
@@ -73,6 +75,53 @@ class DatabaseHelper {
       // Settings table remains unchanged
       await _onCreate(db, newVersion);
     }
+    if (oldVersion < 3) {
+      // Add money_locations table
+      await db.execute('''
+        CREATE TABLE money_locations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          expectedAmount REAL NOT NULL,
+          actualAmount REAL NOT NULL,
+          icon TEXT NOT NULL,
+          color INTEGER NOT NULL,
+          createdAt INTEGER NOT NULL,
+          updatedAt INTEGER NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 4) {
+      // Add money_location_id to transactions table
+      await db.execute('ALTER TABLE transactions ADD COLUMN moneyLocationId INTEGER');
+    }
+    if (oldVersion < 5) {
+      // Remove expectedAmount from money_locations table by recreating it
+      final locations = await db.query('money_locations');
+      await db.execute('DROP TABLE IF EXISTS money_locations');
+      await db.execute('''
+        CREATE TABLE money_locations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          actualAmount REAL NOT NULL,
+          icon TEXT NOT NULL,
+          color INTEGER NOT NULL,
+          createdAt INTEGER NOT NULL,
+          updatedAt INTEGER NOT NULL
+        )
+      ''');
+      // Restore data without expectedAmount
+      for (final loc in locations) {
+        await db.insert('money_locations', {
+          'id': loc['id'],
+          'name': loc['name'],
+          'actualAmount': loc['actualAmount'],
+          'icon': loc['icon'],
+          'color': loc['color'],
+          'createdAt': loc['createdAt'],
+          'updatedAt': loc['updatedAt'],
+        });
+      }
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -87,7 +136,8 @@ class DatabaseHelper {
         paymentMethod TEXT NOT NULL,
         isRecurring INTEGER NOT NULL,
         recurringType TEXT,
-        createdAt INTEGER NOT NULL
+        createdAt INTEGER NOT NULL,
+        moneyLocationId INTEGER
       )
     ''');
 
@@ -157,6 +207,18 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         key TEXT NOT NULL UNIQUE,
         value TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE money_locations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        actualAmount REAL NOT NULL,
+        icon TEXT NOT NULL,
+        color INTEGER NOT NULL,
+        createdAt INTEGER NOT NULL,
+        updatedAt INTEGER NOT NULL
       )
     ''');
   }
@@ -236,6 +298,15 @@ class DatabaseHelper {
 
   Future<void> deleteTip(int id) => delete('tips', where: 'id=?', whereArgs: [id]);
 
+  // MoneyLocation CRUD
+  Future<List<MoneyLocation>> getMoneyLocations() async => (await query('money_locations')).map(MoneyLocation.fromMap).toList();
+
+  Future<int> insertMoneyLocation(MoneyLocation ml) => insert('money_locations', ml.toMap());
+
+  Future<void> updateMoneyLocation(MoneyLocation ml) => update('money_locations', ml.toMap(), where: 'id=?', whereArgs: [ml.id]);
+
+  Future<void> deleteMoneyLocation(int id) => delete('money_locations', where: 'id=?', whereArgs: [id]);
+
   // Settings
   Future<String?> getSetting(String key) async {
     final rows = await query('settings', where: 'key=?', whereArgs: [key]);
@@ -254,6 +325,7 @@ class DatabaseHelper {
     await db.delete('zakat');
     await db.delete('installments');
     await db.delete('tips');
+    await db.delete('money_locations');
     await db.delete('settings');
     
     debugPrint('Database reset completed');

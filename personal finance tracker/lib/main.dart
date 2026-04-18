@@ -13,6 +13,7 @@ import 'providers/budget_provider.dart';
 import 'providers/zakat_provider.dart';
 import 'providers/installment_provider.dart';
 import 'providers/tips_provider.dart';
+import 'providers/money_location_provider.dart';
 import 'screens/transactions/add_transaction_screen.dart';
 import 'screens/home/dashboard_screen.dart';
 import 'screens/analytics/analytics_screen.dart';
@@ -23,6 +24,7 @@ import 'screens/installments/installments_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/categories/categories_screen.dart';
 import 'screens/transactions/transaction_list_screen.dart';
+import 'screens/money_locations/money_locations_screen.dart';
 
 void main() async {
   // Enable debug flags
@@ -80,11 +82,17 @@ void main() async {
     await TipsProvider.seedDefaultTips();
     debugPrint('Default tips seeded successfully');
 
+    debugPrint('Initializing money locations...');
+    final moneyLocationProvider = MoneyLocationProvider();
+    await moneyLocationProvider.seedDefaultMoneyLocations();
+    debugPrint('Money locations initialized successfully');
+
     debugPrint('Starting app...');
     runApp(MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: settingsProvider),
         ChangeNotifierProvider.value(value: categoryProvider),
+        ChangeNotifierProvider.value(value: moneyLocationProvider),
         ChangeNotifierProvider(create: (_) => BudgetProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => ZakatProvider()),
@@ -143,6 +151,7 @@ class MyApp extends StatelessWidget {
                 '/settings': (context) => const SettingsScreen(),
                 '/categories': (context) => const CategoriesScreen(),
                 '/transactions': (context) => const TransactionListScreen(),
+                '/money_locations': (context) => const MoneyLocationsScreen(),
               },
               debugShowCheckedModeBanner: false,
             ),
@@ -176,6 +185,7 @@ class MyApp extends StatelessWidget {
               '/settings': (context) => const SettingsScreen(),
               '/categories': (context) => const CategoriesScreen(),
               '/transactions': (context) => const TransactionListScreen(),
+              '/money_locations': (context) => const MoneyLocationsScreen(),
             },
             debugShowCheckedModeBanner: false,
           ),

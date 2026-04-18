@@ -98,6 +98,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.account_balance_wallet),
+                title: const Text('إدارة أماكن المال'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/money_locations');
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.account_balance),
                 title: const Text('الزكاة'),
                 onTap: () {
@@ -198,6 +206,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.pushNamed(context, '/categories');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.account_balance_wallet, color: Colors.brown),
+                title: const Text('إدارة أماكن المال'),
+                subtitle: const Text('قسم أموالك بين كاش، بنك، وغيرها'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/money_locations');
                 },
               ),
               ListTile(

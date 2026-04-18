@@ -7,6 +7,7 @@ import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/budget_provider.dart';
+import '../../providers/money_location_provider.dart';
 import '../../models/transaction.dart';
 
 class AddTransactionScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   bool _includeInZakat = false;
   String _selectedPaymentMethod = 'نقدي';
   String? _selectedRecurringType;
+  int? _selectedMoneyLocationId;
 
   @override
   void initState() {
@@ -42,6 +44,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _isRecurring = t.isRecurring;
       _selectedPaymentMethod = t.paymentMethod;
       _selectedRecurringType = t.recurringType;
+      _selectedMoneyLocationId = t.moneyLocationId;
     }
   }
 
@@ -134,6 +137,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     child: Text(method),
                   )).toList(),
                   onChanged: (value) => setState(() => _selectedPaymentMethod = value!),
+                ),
+                const SizedBox(height: 20),
+                // Money location
+                Consumer<MoneyLocationProvider>(
+                  builder: (context, moneyLocationProvider, child) {
+                    return DropdownButtonFormField<int>(
+                      value: _selectedMoneyLocationId,
+                      decoration: const InputDecoration(
+                        labelText: 'مكان المال',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: moneyLocationProvider.moneyLocations.map((location) {
+                        return DropdownMenuItem<int>(
+                          value: location.id,
+                          child: Text(location.name),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => _selectedMoneyLocationId = value),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 // Category grid
@@ -296,6 +319,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       isRecurring: _isRecurring,
       recurringType: _selectedRecurringType,
       createdAt: widget.transaction?.createdAt ?? DateTime.now(),
+      moneyLocationId: _selectedMoneyLocationId,
     );
 
     try {
