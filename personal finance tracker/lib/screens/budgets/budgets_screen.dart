@@ -336,7 +336,7 @@ class _AddBudgetSheetState extends State<_AddBudgetSheet> {
                 initialValue: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'التصنيف'),
                 items: expenseCategories.map((cat) {
-                  return DropdownMenuItem(
+                  return DropdownMenuItem<String>(
                     value: cat.name,
                     child: Text(cat.name),
                   );

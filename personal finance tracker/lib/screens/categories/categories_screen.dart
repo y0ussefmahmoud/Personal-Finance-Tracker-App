@@ -85,7 +85,7 @@ class _CategoryTabView extends StatelessWidget {
         if (categoryProvider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        List<Category> filteredCategories = _filterCategories(categoryProvider.categories, filter);
+        List<Category> filteredCategories = _filterCategories(categoryProvider.categories.cast<Category>(), filter);
         if (filteredCategories.isEmpty) {
           return const Center(child: Text('لا توجد تصنيفات'));
         }

@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import '../database/database_helper.dart';
 import '../models/installment.dart';
+import '../repositories/installment_repository.dart';
 
 class InstallmentProvider extends ChangeNotifier {
   List<Installment> installments = [];
   bool isLoading = false;
+  final InstallmentRepository _installmentRepository;
+
+  InstallmentProvider() : _installmentRepository = InstallmentRepository(DatabaseHelper());
 
   double get totalDebt {
     return installments
@@ -29,27 +34,23 @@ class InstallmentProvider extends ChangeNotifier {
   Future<void> fetchInstallments() async {
     isLoading = true;
     notifyListeners();
-    final db = DatabaseHelper();
-    installments = await db.getInstallments();
+    installments = await _installmentRepository.getAllInstallments();
     isLoading = false;
     notifyListeners();
   }
 
   Future<void> addInstallment(Installment installment) async {
-    final db = DatabaseHelper();
-    await db.insertInstallment(installment);
+    await _installmentRepository.addInstallment(installment);
     await fetchInstallments();
   }
 
   Future<void> updateInstallment(Installment installment) async {
-    final db = DatabaseHelper();
-    await db.updateInstallment(installment);
+    await _installmentRepository.updateInstallment(installment);
     await fetchInstallments();
   }
 
   Future<void> deleteInstallment(int id) async {
-    final db = DatabaseHelper();
-    await db.deleteInstallment(id);
+    await _installmentRepository.deleteInstallment(id);
     await fetchInstallments();
   }
 }

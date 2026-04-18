@@ -80,7 +80,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   const SizedBox(height: 16),
                   _CategoryBreakdownCard(
                     expenseByCategory: expByCat,
-                    categories: cp.categories,
+                    categories: cp.categories.cast<Category>(),
                   ),
                 ],
               ),

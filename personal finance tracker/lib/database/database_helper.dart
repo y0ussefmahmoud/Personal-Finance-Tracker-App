@@ -1,6 +1,6 @@
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:flutter/foundation.dart';
 import '../models/transaction.dart' as transaction;
 import '../models/budget.dart';
 import '../models/category.dart' as models;
@@ -328,6 +328,6 @@ class DatabaseHelper {
     await db.delete('money_locations');
     await db.delete('settings');
     
-    debugPrint('Database reset completed');
+    if (kDebugMode) debugPrint('Database reset completed');
   }
 }

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
 import '../models/transaction.dart' as transaction;
+import '../repositories/transaction_repository.dart';
 import '../providers/budget_provider.dart';
 
 /// Transaction Provider - Manages all financial transactions
@@ -25,8 +26,10 @@ class TransactionProvider extends ChangeNotifier {
   List<transaction.Transaction> _transactions = [];
   bool _isLoading = false;
   BudgetProvider? budgetProvider;
+  final TransactionRepository _transactionRepository;
 
-  TransactionProvider({this.budgetProvider});
+  TransactionProvider({this.budgetProvider})
+      : _transactionRepository = TransactionRepository(DatabaseHelper());
 
   // Public getters
   /// List of all transactions sorted by date (newest first)
@@ -156,13 +159,12 @@ class TransactionProvider extends ChangeNotifier {
   /// Sets loading state during fetch and notifies listeners
   Future<void> fetchTransactions() async {
     _setLoading(true);
-    
+
     try {
-      final db = DatabaseHelper();
-      _transactions = await db.getTransactions();
+      _transactions = await _transactionRepository.getAllTransactions();
     } catch (e) {
       _transactions = [];
-      debugPrint('Error fetching transactions: $e');
+      if (kDebugMode) debugPrint('Error fetching transactions: $e');
     } finally {
       _setLoading(false);
       notifyListeners();
@@ -170,67 +172,64 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   /// Adds a new transaction to database
-  /// 
+  ///
   /// [transaction] The transaction to add
   /// Updates budget if it's an expense transaction
   Future<void> addTransaction(transaction.Transaction transaction) async {
     try {
-      final db = DatabaseHelper();
-      await db.insertTransaction(transaction);
-      
+      await _transactionRepository.addTransaction(transaction);
+
       // Refresh data
       await fetchTransactions();
-      
+
       // Update budget if expense
       if (budgetProvider != null && transaction.type == 'expense') {
         final spent = expenseByCategory[transaction.category] ?? 0;
         await budgetProvider!.updateSpentForCategory(transaction.category, spent);
       }
     } catch (e) {
-      debugPrint('Error adding transaction: $e');
+      if (kDebugMode) debugPrint('Error adding transaction: $e');
       rethrow;
     }
   }
 
   /// Updates an existing transaction
-  /// 
+  ///
   /// [transaction] The transaction with updated data
   /// Handles budget updates for category changes
   Future<void> updateTransaction(transaction.Transaction transaction) async {
     try {
-      final db = DatabaseHelper();
       final old = _transactions.firstWhere((t) => t.id == transaction.id);
-      
-      await db.updateTransaction(transaction);
+
+      await _transactionRepository.updateTransaction(transaction);
       await fetchTransactions();
-      
+
       // Update budgets if needed
       await _handleBudgetUpdates(old, transaction);
     } catch (e) {
-      debugPrint('Error updating transaction: $e');
+      if (kDebugMode) debugPrint('Error updating transaction: $e');
       rethrow;
     }
   }
 
   /// Deletes a transaction by ID
-  /// 
+  ///
   /// [id] The ID of the transaction to delete
   /// Updates budget if it's an expense transaction
   Future<void> deleteTransaction(int id) async {
     try {
-      final db = DatabaseHelper();
       final deleted = _transactions.firstWhere((t) => t.id == id);
-      
-      await db.deleteTransaction(id);
+
+      await _transactionRepository.deleteTransaction(id);
       await fetchTransactions();
-      
+
       // Update budget if expense
       if (budgetProvider != null && deleted.type == 'expense') {
         final spent = expenseByCategory[deleted.category] ?? 0;
         await budgetProvider!.updateSpentForCategory(deleted.category, spent);
       }
     } catch (e) {
-      debugPrint('Error deleting transaction: $e');
+      if (kDebugMode) debugPrint('Error deleting transaction: $e');
       rethrow;
     }
   }

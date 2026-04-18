@@ -143,7 +143,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 Consumer<MoneyLocationProvider>(
                   builder: (context, moneyLocationProvider, child) {
                     return DropdownButtonFormField<int>(
-                      value: _selectedMoneyLocationId,
+                      initialValue: _selectedMoneyLocationId,
                       decoration: const InputDecoration(
                         labelText: 'مكان المال',
                         border: OutlineInputBorder(),

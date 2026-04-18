@@ -18,7 +18,6 @@ class _MoneyLocationsScreenState extends State<MoneyLocationsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<MoneyLocationProvider>(context, listen: false);
-      provider.fetchMoneyLocations();
       if (provider.moneyLocations.isEmpty) {
         provider.seedDefaultMoneyLocations();
       }
@@ -153,7 +152,7 @@ class _SummaryCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('إجمالي الرصيد المتوقع:'),
+                const Text('إجمالي المتوقع:'),
                 Text('$currency${totalExpected.toStringAsFixed(2)}'),
               ],
             ),
@@ -161,7 +160,7 @@ class _SummaryCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('إجمالي الرصيد الفعلي:'),
+                const Text('إجمالي الفعلي:'),
                 Text('$currency${totalActual.toStringAsFixed(2)}'),
               ],
             ),
@@ -208,8 +207,8 @@ class _MoneyLocationListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final icon = iconFromString(location.icon);
     final color = Color(location.color);
-    final deficit = location.actualAmount - expectedAmount;
-    final hasDeficit = deficit < -0.01;
+    final deficit = expectedAmount - location.actualAmount;
+    final hasDeficit = deficit > 0.01;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -222,8 +221,8 @@ class _MoneyLocationListTile extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('رصيد متوقع: $currency${expectedAmount.toStringAsFixed(2)}'),
-            Text('رصيد فعلي: $currency${location.actualAmount.toStringAsFixed(2)}'),
+            Text('متوقع: $currency${expectedAmount.toStringAsFixed(2)}'),
+            Text('فعلي: $currency${location.actualAmount.toStringAsFixed(2)}'),
             if (hasDeficit)
               Text(
                 'عجز: $currency${deficit.toStringAsFixed(2)}',

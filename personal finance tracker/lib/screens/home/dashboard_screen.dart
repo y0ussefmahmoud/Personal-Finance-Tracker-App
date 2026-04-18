@@ -4,6 +4,7 @@ import '../../../providers/transaction_provider.dart';
 import '../../../providers/category_provider.dart';
 import '../../../providers/budget_provider.dart';
 import '../../../providers/settings_provider.dart';
+import '../../../models/category.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/quick_stats_row.dart';
@@ -308,14 +309,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Consumer2<TransactionProvider, CategoryProvider>(
                         builder: (ctx, tp, cp, child) => ExpensePieChart(
                           expenseByCategory: tp.expenseByCategory,
-                          categories: cp.categories,
+                          categories: cp.categories.cast<Category>(),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Consumer3<TransactionProvider, CategoryProvider, SettingsProvider>(
                         builder: (ctx, tp, cp, sp, child) => RecentTransactionsList(
                           txns: tp.transactions.take(5).toList(),
-                          categories: cp.categories,
+                          categories: cp.categories.cast<Category>(),
                           onViewAll: () => Navigator.pushNamed(ctx, '/transactions'),
                           currency: sp.currencySymbol,
                         ),

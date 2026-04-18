@@ -9,10 +9,9 @@ import '../../providers/zakat_provider.dart';
 import '../../providers/tips_provider.dart';
 
 /// Settings Screen - Manages application settings and user preferences
-/// 
+///
 /// This screen provides access to:
-/// - Theme switching (light/dark mode)
-/// - Language settings
+/// - Theme switching (light/dark/system mode)
 /// - Currency settings
 /// - Database reset functionality
 /// - Application information and version details
@@ -46,16 +45,40 @@ class SettingsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(title: 'التفضيلات'),
-        SwitchListTile(
-          title: const Text('الوضع المظلم'),
-          subtitle: const Text('تبديل بين الوضع الفاتح والداكن'),
-          value: settings.themeMode == ThemeMode.dark,
+        const ListTile(
+          title: Text('الوضع'),
+          subtitle: Text('اختر وضع التطبيق'),
+          leading: Icon(Icons.palette),
+        ),
+        RadioListTile<ThemeMode>(
+          title: const Text('فاتح'),
+          subtitle: const Text('استخدام الوضع الفاتح دائماً'),
+          value: ThemeMode.light,
+          groupValue: settings.themeMode,
           onChanged: (value) {
-            settings.setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
+            if (value != null) settings.setThemeMode(value);
           },
-          secondary: Icon(
-            settings.themeMode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode,
-          ),
+          secondary: const Icon(Icons.light_mode),
+        ),
+        RadioListTile<ThemeMode>(
+          title: const Text('داكن'),
+          subtitle: const Text('استخدام الوضع الداكن دائماً'),
+          value: ThemeMode.dark,
+          groupValue: settings.themeMode,
+          onChanged: (value) {
+            if (value != null) settings.setThemeMode(value);
+          },
+          secondary: const Icon(Icons.dark_mode),
+        ),
+        RadioListTile<ThemeMode>(
+          title: const Text('نظام'),
+          subtitle: const Text('مطابقة إعدادات الجهاز تلقائياً'),
+          value: ThemeMode.system,
+          groupValue: settings.themeMode,
+          onChanged: (value) {
+            if (value != null) settings.setThemeMode(value);
+          },
+          secondary: const Icon(Icons.brightness_auto),
         ),
         ListTile(
           title: const Text('العملة'),
@@ -87,7 +110,7 @@ class SettingsScreen extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.info),
           title: const Text('الإصدار'),
-          subtitle: const Text('1.3.0'),
+          subtitle: const Text('1.3.2'),
         ),
         ListTile(
           leading: const Icon(Icons.description),
@@ -95,7 +118,7 @@ class SettingsScreen extends StatelessWidget {
           onTap: () => showAboutDialog(
             context: context,
             applicationName: 'Personal Finance Tracker',
-            applicationVersion: '1.3.0',
+            applicationVersion: '1.3.2',
             applicationIcon: const Icon(Icons.account_balance_wallet, size: 48),
           ),
         ),

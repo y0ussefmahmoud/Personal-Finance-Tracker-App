@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import '../database/database_helper.dart';
 import '../models/tip.dart';
+import '../repositories/tip_repository.dart';
 
 class TipsProvider extends ChangeNotifier {
   List<Tip> tips = [];
   bool isLoading = false;
+  final TipRepository _tipRepository;
+
+  TipsProvider() : _tipRepository = TipRepository(DatabaseHelper());
 
   List<Tip> get unreadTips {
     return tips.where((t) => !t.isRead).toList();
@@ -25,33 +30,28 @@ class TipsProvider extends ChangeNotifier {
   Future<void> fetchTips() async {
     isLoading = true;
     notifyListeners();
-    final db = DatabaseHelper();
-    tips = await db.getTips();
+    tips = await _tipRepository.getAllTips();
     isLoading = false;
     notifyListeners();
   }
 
   Future<void> getTips() async {
-    final tipsList = await DatabaseHelper().getTips();
-    tips = tipsList;
+    tips = await _tipRepository.getAllTips();
     notifyListeners();
   }
 
   Future<void> addTip(Tip tip) async {
-    final db = DatabaseHelper();
-    await db.insertTip(tip);
+    await _tipRepository.addTip(tip);
     await fetchTips();
   }
 
   Future<void> updateTip(Tip tip) async {
-    final db = DatabaseHelper();
-    await db.updateTip(tip);
+    await _tipRepository.updateTip(tip);
     await fetchTips();
   }
 
   Future<void> deleteTip(int id) async {
-    final db = DatabaseHelper();
-    await db.deleteTip(id);
+    await _tipRepository.deleteTip(id);
     await fetchTips();
   }
 
@@ -118,8 +118,9 @@ class TipsProvider extends ChangeNotifier {
       ),
     ];
 
+    final tipRepository = TipRepository(db);
     for (final tip in defaultTips) {
-      await db.insertTip(tip);
+      await tipRepository.addTip(tip);
     }
 
     await db.setSetting('tips_seeded', 'true');

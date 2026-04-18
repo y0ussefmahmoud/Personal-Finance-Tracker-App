@@ -1,35 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import '../database/database_helper.dart';
 import '../models/budget.dart';
+import '../repositories/budget_repository.dart';
 
 class BudgetProvider extends ChangeNotifier {
   List<Budget> budgets = [];
   bool isLoading = false;
+  final BudgetRepository _budgetRepository;
+
+  BudgetProvider() : _budgetRepository = BudgetRepository(DatabaseHelper());
 
   Future<void> fetchBudgets() async {
     isLoading = true;
     notifyListeners();
-    final db = DatabaseHelper();
-    budgets = await db.getBudgets();
+    budgets = await _budgetRepository.getAllBudgets();
     isLoading = false;
     notifyListeners();
   }
 
   Future<void> addBudget(Budget budget) async {
-    final db = DatabaseHelper();
-    await db.insertBudget(budget);
+    await _budgetRepository.addBudget(budget);
     await fetchBudgets();
   }
 
   Future<void> updateBudget(Budget budget) async {
-    final db = DatabaseHelper();
-    await db.updateBudget(budget);
+    await _budgetRepository.updateBudget(budget);
     await fetchBudgets();
   }
 
   Future<void> deleteBudget(int id) async {
-    final db = DatabaseHelper();
-    await db.deleteBudget(id);
+    await _budgetRepository.deleteBudget(id);
     await fetchBudgets();
   }
 
